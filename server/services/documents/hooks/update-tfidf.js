@@ -1,3 +1,4 @@
+
 const debug = require('debug')('hooks:fetch-documents')
 
 // pull-streams
@@ -22,30 +23,21 @@ module.exports = function(options) {
   options = Object.assign({}, defaults, options)
 
   return function(hook, next) {
-    hook.fetchDocument = true
-    const documents = hook.app.service('documents')
+    hook.updateTfidf = true
     const { url, userId } = hook.data
     debug('url', hook.data)
 
     if (isUrl(url)) {
-      debug('isUrl')      
+      const documents = hook.app.service('documents')
+      
       pull(
         once(url),
         asyncMap(queryByUrl),
-        map(m => {
-          debug(m)
-          return m
-        }),
-        filter(result => !result.data[0] || !result.data[0].text),
-        map(m => {
-          debug(m)
-          return m
-        }),
+        filter(result => !result.data[0].text),
         asyncMap((documents, cb) => request.get(url, cb)),
         map(extract),
         drain(
           document => {
-            debug(document)
             hook.data = merge(hook.data, document)
           }, 
           () => {
