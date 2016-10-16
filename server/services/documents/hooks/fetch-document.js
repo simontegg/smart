@@ -32,20 +32,20 @@ module.exports = function(options) {
       pull(
         once(url),
         asyncMap(queryByUrl),
-        map(m => {
-          debug(m)
-          return m
-        }),
         filter(result => !result.data[0] || !result.data[0].text),
         map(m => {
+          debug('aftern filter', m)
+          return m
+        }),
+        asyncMap((result, cb) => request.get(url, cb)),
+        map(extract),
+        map(m => {
           debug(m)
           return m
         }),
-        asyncMap((documents, cb) => request.get(url, cb)),
-        map(extract),
         drain(
           document => {
-            debug(document)
+            debug('drain op', document)
             hook.data = merge(hook.data, document)
           }, 
           () => {
@@ -59,7 +59,15 @@ module.exports = function(options) {
     }
 
     function extract (res) {
-      return { text, description, author } = extractor(res.text)
+      const { 
+        text,
+        title,
+        description, 
+        author,
+        keywords,
+        publisher
+      } = extractor(res.text)
+      return { text, title, description, author, keywords, publisher }
     }
 
     function queryByUrl (url, cb) {

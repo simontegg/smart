@@ -3,6 +3,7 @@
 const globalHooks = require('../../../hooks');
 const hooks = require('feathers-hooks');
 const fetchDocument = require('./fetch-document')
+const updateTfidf = require('./update-tfidf')
 
 
 exports.before = {
@@ -10,7 +11,7 @@ exports.before = {
   find: [],
   get: [],
   create: [
-    fetchDocument()
+    fetchDocument(), updateTfidf()
   ],
   update: [],
   patch: [],

@@ -12,6 +12,7 @@ module.exports = function(){
   });
 
   let options = {
+    id: 'userId',
     Model: db,
     paginate: {
       default: 5,
