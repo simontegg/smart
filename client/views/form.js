@@ -19,7 +19,7 @@ module.exports = function (model, dispatch) {
   }
 
   return html`
-    <div>
+    <main>
       <form id='test' onsubmit=${handlesumbit} >
         <fieldset>
           <label for="url-input">url</label>
@@ -33,6 +33,6 @@ module.exports = function (model, dispatch) {
         </fieldset>
         <div>${model}</div>
       </form>
-    </div>
+    </main>
   `
 }

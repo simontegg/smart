@@ -16,8 +16,6 @@ const compare = require('./apps/compare')
 // const dashboard = require('./apps/dashboard')
 const landing = require('./landing/app')
 
-
-
 const app = App([
   compare,
   form,
@@ -30,11 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   pull(
     views(),
-    map(v => {
-     return v
-    }),
     drain(function (view) {
-     debug('v', view) 
+     debug('view', view) 
       html.update(main, view)
     })
   )

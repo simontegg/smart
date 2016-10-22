@@ -10,8 +10,8 @@ module.exports = function (model, dispatch) {
   }
 
   return html`
-    <div>
+    <main>
       <div id="compare">${model}</div>
-    </div>
+    </main>
   `
 }
