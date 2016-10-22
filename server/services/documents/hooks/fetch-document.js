@@ -18,17 +18,17 @@ const natural = require('natural')
 // constants
 const defaults = {}
 
-module.exports = function(options) {
+module.exports = function (options) {
   options = Object.assign({}, defaults, options)
 
-  return function(hook, next) {
+  return function (hook, next) {
     hook.fetchDocument = true
     const documents = hook.app.service('documents')
     const { url, userId } = hook.data
     debug('url', hook.data)
 
     if (isUrl(url)) {
-      debug('isUrl')      
+      debug('isUrl')
       pull(
         once(url),
         asyncMap(queryByUrl),
@@ -47,7 +47,7 @@ module.exports = function(options) {
           document => {
             debug('drain op', document)
             hook.data = merge(hook.data, document)
-          }, 
+          },
           () => {
             debug('done', hook.data)
             next(null, hook)
@@ -59,10 +59,10 @@ module.exports = function(options) {
     }
 
     function extract (res) {
-      const { 
+      const {
         text,
         title,
-        description, 
+        description,
         author,
         keywords,
         publisher

@@ -5,5 +5,5 @@ const set = Action(SET)
 
 module.exports = {
   SET,
-  set,
+  set
 }

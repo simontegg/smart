@@ -1,20 +1,20 @@
-'use strict';
+'use strict'
 
-const assert = require('assert');
-const fetchDocument = require('../../../../src/services/documents/hooks/fetch-document.js');
+const assert = require('assert')
+const fetchDocument = require('../../../../src/services/documents/hooks/fetch-document.js')
 
-describe('documents fetchDocument hook', function() {
-  it('hook can be used', function() {
+describe('documents fetchDocument hook', function () {
+  it('hook can be used', function () {
     const mockHook = {
       type: 'before',
       app: {},
       params: {},
       result: {},
       data: {}
-    };
+    }
 
-    fetchDocument()(mockHook);
+    fetchDocument()(mockHook)
 
-    assert.ok(mockHook.fetchDocument);
-  });
-});
+    assert.ok(mockHook.fetchDocument)
+  })
+})

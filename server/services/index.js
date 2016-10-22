@@ -2,13 +2,14 @@ const documents = require('./documents')
 const authentication = require('./authentication')
 const user = require('./user')
 const tfidf = require('./tfidf')
+const sample = require('./sample')
 
-module.exports = function() {
+module.exports = function () {
   const app = this
-
 
   app.configure(authentication)
   app.configure(user)
   app.configure(documents)
   app.configure(tfidf)
+  app.configure(sample)
 }

@@ -4,69 +4,79 @@ const debug = require('debug')('hooks:update-tfidf')
 // pull-streams
 const pull = require('pull-stream')
 const once = require('pull-stream/sources/once')
+const values = require('pull-stream/sources/values')
+const split = require('pull-split')
 const asyncMap = require('pull-stream/throughs/async-map')
 const map = require('pull-stream/throughs/map')
 const drain = require('pull-stream/sinks/drain')
 
 // modules
+const gramophone = require('gramophone')
+const stopword = require('stopword')
 const natural = require('natural')
 
 // constants
 const defaults = {}
 
-module.exports = function(options) {
+module.exports = function (options) {
   options = Object.assign({}, defaults, options)
 
-  return function(hook, next) {
+  return function (hook, next) {
     hook.updateTfidf = true
     const tfidfService = hook.app.service('/tfidfs')
     const userId = hook.data.userId || 'default-user'
-    //debug(hook.data)
+    let documentIndex
+    // debug(hook.data)
 
     pull(
       once(userId),
       asyncMap(queryByUserId),
+      map((result) => result.data[0]),
       map(getTfidf),
       asyncMap((tfidf, cb) => {
-        const originalLength = tfidf.documents.length
+        documentIndex = tfidf.documents.length
         tfidf.addDocument(hook.data.text)
-        const string = JSON.stringify(tfidf) 
-        if (originalLength === 0) {
+        const terms = tfidf.listTerms(documentIndex)
+        debug(terms)
+        const string = JSON.stringify(tfidf)
+        if (documentIndex === 0) {
           tfidfService.create({ userId, string }, {}, cb)
         } else {
           tfidfService.update(userId, { userId, string }, {}, cb)
         }
       }),
-      map(res => {
-        debug('log', res)
-        return res
-      }),
       drain(
-        () => {
+        (res) => {
           hook.data.tfidfId = userId
-        }, 
+          hook.data.documentIndex = documentIndex
+        },
         () => {
-          debug('done', hook.data)
           next(null, hook)
         }
       )
     )
 
-    function getTfidf (result) {
-      let tfidf = result.data[0]
-      if (tfidf) {
-        tfidf = new natural.TfIdf(JSON.parse(tfidf.string))
-      } else {
-        tfidf = new natural.TfIdf()
-      }
-      debug(tfidf)
-      return tfidf
-    }
-
     function queryByUserId (userId, cb) {
       tfidfService.find({ query: { userId } }, cb)
     }
   }
-
 }
+
+function getTfidf (tfidf) {
+  if (tfidf) {
+    return new natural.TfIdf(JSON.parse(tfidf.string))
+  } else {
+    return new natural.TfIdf()
+  }
+}
+
+//function tokenise (text) {
+//  pull( 
+//    once(text),
+//    split(' '),
+//    map((word)
+//    filter
+//
+//  )
+//}
 

@@ -1,10 +1,9 @@
-'use strict';
+'use strict'
 
-const globalHooks = require('../../../hooks');
-const hooks = require('feathers-hooks');
+const globalHooks = require('../../../hooks')
+const hooks = require('feathers-hooks')
 const fetchDocument = require('./fetch-document')
 const updateTfidf = require('./update-tfidf')
-
 
 exports.before = {
   all: [],
@@ -16,7 +15,7 @@ exports.before = {
   update: [],
   patch: [],
   remove: []
-};
+}
 
 exports.after = {
   all: [],
@@ -26,6 +25,5 @@ exports.after = {
   update: [],
   patch: [],
   remove: []
-};
-
+}
 
