@@ -22,17 +22,20 @@ module.exports = function (options) {
   options = Object.assign({}, defaults, options)
 
   return function (hook) {
-    debug('updateTfidf', hook.data, hook.result)
+    debug('updateTfidf', hook.data)
     hook.updateTfidf = true
     const tfidfService = hook.app.service('/tfidfs')
     const userId = hook.data.userId || 'default-user'
-    const tfidfId = hook.data.tfidfId 
     let documentIndex
    
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       pull(
         once(userId),
         asyncMap(queryByUserId),
+        map(t => {
+          debug('test', t)
+          return t
+        }),
         map(getTfidf),
         asyncMap((tfidf, cb) => {
           documentIndex = tfidf.documents.length
@@ -40,28 +43,52 @@ module.exports = function (options) {
           const serialised = JSON.stringify(tfidf)
 
           if (documentIndex === 0) {
-            tfidfService.create({ user_id: userId, serialised }, {}, cb)
+            tfidfService.create(
+              { user_id: userId, serialised }, 
+              {}, 
+              (err, res) => {
+                debug(err, res)
+                cb(err, res)
+              }
+            )
           } else {
             tfidfService.update(
               userId, 
-              { user_id: userId, serialised }, 
+              { serialised }, 
               {}, 
-              cb
+              (err, res) => {
+                debug(err, res)
+                cb(err, res)
+              }
             )
           }
         }),
-        onEnd(() => resolve(hook))
+        drain(
+          () => {
+            debug('drain', hook.data)
+          },
+          () => {
+            debug('drain', hook.data)
+            resolve(hook)
+          }
+        
+        )
       )
     })
 
     function queryByUserId (userId, cb) {
-      tfidfService.get(userId, {}, cb)
+      debug('userId', userId)
+      tfidfService.get(userId, {}, (err, tfidf) => {
+        debug(err, tfidf)
+        if (err.code === 404) cb(null, undefined)
+        cb(err, tfidf)
+      })
     }
   }
 }
 
 function getTfidf (tfidf) {
-  debug(tfidf)
+  debug('getTfidf', tfidf)
   if (tfidf) {
     return new natural.TfIdf(JSON.parse(tfidf.string))
   } else {

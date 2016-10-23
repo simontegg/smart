@@ -18,9 +18,9 @@ exports.before = {
   ],
   get: [],
   create: [
-    iff(condition(textAndTfidfExist), respondWithExisting()),
+    iff(condition(notNew), respondWithExisting()),
     iff(condition(textNotExist), fetchDocument()), 
-    iff(condition(tfidfNotExist), updateTfidf())
+//    iff(condition(newDoc), updateTfidf())
   ],
   update: [],
   patch: [],
@@ -47,20 +47,19 @@ function condition (test) {
         debug(test, test(result))
         return test(result)
       })
-      .catch(console.log)
+      .catch(debug)
   }
 }
 
 function textNotExist (result) {
+  debug(result)
   return result.total === 0 || !result.data[0].text
 }
 
-function tfidfNotExist (result) {
-  return result.total === 0 || !result.data[0].tfidfId
+function newDoc (result) {
+  return result.total === 0
 }
 
-function textAndTfidfExist (result) {
-  debug(result)
-  const doc = result.data[0]
-  return result.total > 0 && doc.text && doc.tfidfId
+function notNew (result) {
+  return result.total > 0 && result.data[0].text
 }

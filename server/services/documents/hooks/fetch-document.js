@@ -8,6 +8,7 @@ const map = require('pull-stream/throughs/map')
 const filter = require('pull-stream/throughs/filter')
 const drain = require('pull-stream/sinks/drain')
 const collect = require('pull-stream/sinks/collect')
+const split = require('pull-split')
 
 // modules
 const isUrl = require('is-url')
@@ -24,38 +25,53 @@ module.exports = function (options) {
   options = Object.assign({}, defaults, options)
 
   return function (hook) {
-    debug('fetchDocument', hook.data)
     hook.fetchDocument = true
     const documents = hook.app.service('documents')
-    const keywords = hook.app.service('keywords')
+    const keywordService = hook.app.service('keywords')
 
     const { url } = hook.data
+    debug(url)
 
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
+      debug('promise')
       pull(
         once(url),
-        asyncMap(queryByUrl),
-        asyncMap((result, cb) => request.get(url, cb)),
+        asyncMap((url, cb) => request.get(url, cb)),
         map(extract),
         drain(
           (document) => {
+            debug(document)
             if (document.keywords) {
-              mapKeywordsToRows(document.keywords, url, keywords.create)
+              mapKeywordsToRows(document.keywords, url)
               delete document.keywords
             }
+            document.author = document.author[0]
             hook.data = merge(
               hook.data, 
               document, 
-              { domain: Url.parse(url).hostname }
+              { hostname: Url.parse(url).hostname }
             )
+            debug('after merge',hook.data)
           },
-          () => resolve(hook)
+          () => {
+            resolve(hook)
+          }
         )
       )
     })
 
     function queryByUrl (url, cb) {
       documents.get(url, {}, cb)
+    }
+
+    function mapKeywordsToRows (keywords, url) {
+      pull(
+        once(keywords),
+        split(','),
+        map(String.trim),
+        map((keyword) => ({ term: keyword, document_url: url })),
+        collect((err, ks) => keywordService.create(ks))
+      )
     }
   }
 }
@@ -72,13 +88,4 @@ function extract (res) {
   return { text, title, description, author, keywords, publisher }
 }
 
-function mapKeywordsToRows (keywords, url, create) {
-  pull(
-    once(keywords),
-    split(','),
-    map(String.trim),
-    map((keyword) => ({ term: keyword, document_url: url })),
-    collect(create)
-  )
-}
 
