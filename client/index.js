@@ -15,11 +15,13 @@ const form = require('./apps/form')
 const compare = require('./apps/compare')
 // const dashboard = require('./apps/dashboard')
 const landing = require('./landing/app')
+const similarity = require('./similarity/app')
 
 const app = App([
   compare,
   form,
-  landing
+  landing,
+  similarity
 ])
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,18 +1,15 @@
+const db = require('../../../data')
 const path = require('path')
 const NeDB = require('nedb')
-const service = require('feathers-nedb')
+const service = require('feathers-knex')
 const hooks = require('./hooks')
 
 module.exports = function () {
   const app = this
 
-  const db = new NeDB({
-    filename: path.join(app.get('nedb'), 'tfidfs.db'),
-    autoload: true
-  })
-
   let options = {
-    id: 'userId',
+    id: 'user_id',
+    name: 'tfidfs',
     Model: db,
     paginate: {
       default: 5,

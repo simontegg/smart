@@ -1,4 +1,3 @@
-
 const debug = require('debug')('hooks:update-tfidf')
 
 // pull-streams
@@ -9,6 +8,7 @@ const split = require('pull-split')
 const asyncMap = require('pull-stream/throughs/async-map')
 const map = require('pull-stream/throughs/map')
 const drain = require('pull-stream/sinks/drain')
+const onEnd = require('pull-stream/sinks/on-end')
 
 // modules
 const gramophone = require('gramophone')
@@ -21,62 +21,51 @@ const defaults = {}
 module.exports = function (options) {
   options = Object.assign({}, defaults, options)
 
-  return function (hook, next) {
+  return function (hook) {
+    debug('updateTfidf', hook.data, hook.result)
     hook.updateTfidf = true
     const tfidfService = hook.app.service('/tfidfs')
     const userId = hook.data.userId || 'default-user'
+    const tfidfId = hook.data.tfidfId 
     let documentIndex
-    // debug(hook.data)
+   
+    return new Promise(function (resolve, reject) {
+      pull(
+        once(userId),
+        asyncMap(queryByUserId),
+        map(getTfidf),
+        asyncMap((tfidf, cb) => {
+          documentIndex = tfidf.documents.length
+          tfidf.addDocument(hook.data.text)
+          const serialised = JSON.stringify(tfidf)
 
-    pull(
-      once(userId),
-      asyncMap(queryByUserId),
-      map((result) => result.data[0]),
-      map(getTfidf),
-      asyncMap((tfidf, cb) => {
-        documentIndex = tfidf.documents.length
-        tfidf.addDocument(hook.data.text)
-        const terms = tfidf.listTerms(documentIndex)
-        debug(terms)
-        const string = JSON.stringify(tfidf)
-        if (documentIndex === 0) {
-          tfidfService.create({ userId, string }, {}, cb)
-        } else {
-          tfidfService.update(userId, { userId, string }, {}, cb)
-        }
-      }),
-      drain(
-        (res) => {
-          hook.data.tfidfId = userId
-          hook.data.documentIndex = documentIndex
-        },
-        () => {
-          next(null, hook)
-        }
+          if (documentIndex === 0) {
+            tfidfService.create({ user_id: userId, serialised }, {}, cb)
+          } else {
+            tfidfService.update(
+              userId, 
+              { user_id: userId, serialised }, 
+              {}, 
+              cb
+            )
+          }
+        }),
+        onEnd(() => resolve(hook))
       )
-    )
+    })
 
     function queryByUserId (userId, cb) {
-      tfidfService.find({ query: { userId } }, cb)
+      tfidfService.get(userId, {}, cb)
     }
   }
 }
 
 function getTfidf (tfidf) {
+  debug(tfidf)
   if (tfidf) {
     return new natural.TfIdf(JSON.parse(tfidf.string))
   } else {
     return new natural.TfIdf()
   }
 }
-
-//function tokenise (text) {
-//  pull( 
-//    once(text),
-//    split(' '),
-//    map((word)
-//    filter
-//
-//  )
-//}
 

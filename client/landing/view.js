@@ -10,6 +10,8 @@ function viewLanding (model, dispatch) {
       <div class='toolbar'>
         <a href="/compare">compare</a>
         <a href="/form">submit</a>
+        <a href="/similarity">similarity</a>
+
       </div>
       <div class='center'>
         <header>

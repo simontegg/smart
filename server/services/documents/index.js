@@ -1,19 +1,16 @@
-
+const db = require('../../../data')
 const path = require('path')
 const NeDB = require('nedb')
-const service = require('feathers-nedb')
+const service = require('feathers-knex')
 const hooks = require('./hooks')
 
 module.exports = function () {
   const app = this
 
-  const db = new NeDB({
-    filename: path.join(app.get('nedb'), 'documents.db'),
-    autoload: true
-  })
-
   let options = {
     Model: db,
+    name: 'documents',
+    id: 'url',
     paginate: {
       default: 100,
       max: 100
